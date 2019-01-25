@@ -20,7 +20,7 @@ module.exports = {
         const dir = path.dirname(functionHandler);
         const handler = path.basename(functionHandler);
         const splitHandler = handler.split('.');
-        const filePath = `${dir}/${splitHandler[0]}.js`;
+        const filePath = `.build/${dir}/${splitHandler[0]}.js`;
         const handlerName = `${splitHandler[1]}`;
 
         return {handler: handlerName, filePath};
@@ -86,12 +86,38 @@ module.exports = {
             //before each task restore global default env variables
             process.env = Object.assign({}, this.environmentVariables);
             let f = this.variables[currentStateName];
+
             f = this.functions[f];
+
             if (!f) {
-                this.cliLog(`Function "${currentStateName}" does not presented in serverless manifest`);
+                let found = false;
+                for (let i = 0; i < this.functions.length; i++) {
+                    if (found) {
+                        break;
+                    }
+
+                    const currentFunction = this.functions[i];
+                    const keys = Object.keys(currentFunction);
+
+                    for (let j = 0; j < keys.length; j++) {
+                        if (keys[j] === this.variables[currentStateName]) {
+                            f = currentFunction[keys[j]];
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!f) {
+                this.cliLog(
+                    `Function "${currentStateName}" has not been found in serverless.yml`
+                );
                 process.exit(1);
             }
-            const {handler, filePath} = this._findFunctionPathAndHandler(f.handler);
+            const { handler, filePath } = this._findFunctionPathAndHandler(
+                f.handler
+            );
             // if function has additional variables - attach it to function
             if (f.environment) {
                 process.env = _.extend(process.env, f.environment);
