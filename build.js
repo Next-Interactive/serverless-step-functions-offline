@@ -85,32 +85,27 @@ module.exports = {
         case 'Task': // just push task to general array
             //before each task restore global default env variables
             process.env = Object.assign({}, this.environmentVariables);
-            let f = this.variables[currentStateName];
+            const variable = this.getItemFromConfiguration(this.variables, currentStateName);
 
-            f = this.functions[f];
-
-            if (!f) {
-                this.functions.find(_func => {
-                    Object.keys(_func).find(key => {
-                        if (key === this.variables[currentStateName]) {
-                            f = _func[key];
-                        }
-                    });
-                });
+            let lambdaFunction;
+            if (this.functions[variable]) {
+                lambdaFunction = this.functions[variable];
+            } else {
+                lambdaFunction = this.getItemFromConfiguration(this.functions, variable);
             }
 
-            if (!f) {
+            if (!lambdaFunction) {
                 this.cliLog(
                     `Function "${currentStateName}" has not been found in serverless.yml`
                 );
                 process.exit(1);
             }
             const { handler, filePath } = this._findFunctionPathAndHandler(
-                f.handler
+                lambdaFunction.handler
             );
             // if function has additional variables - attach it to function
-            if (f.environment) {
-                process.env = _.extend(process.env, f.environment);
+            if (lambdaFunction.environment) {
+                process.env = _.extend(process.env, lambdaFunction.environment);
             }
             return {
                 name: currentStateName,
