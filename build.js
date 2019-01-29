@@ -90,23 +90,13 @@ module.exports = {
             f = this.functions[f];
 
             if (!f) {
-                let found = false;
-                for (let i = 0; i < this.functions.length; i++) {
-                    if (found) {
-                        break;
-                    }
-
-                    const currentFunction = this.functions[i];
-                    const keys = Object.keys(currentFunction);
-
-                    for (let j = 0; j < keys.length; j++) {
-                        if (keys[j] === this.variables[currentStateName]) {
-                            f = currentFunction[keys[j]];
-                            found = true;
-                            break;
+                this.functions.find(_func => {
+                    Object.keys(_func).find(key => {
+                        if (key === this.variables[currentStateName]) {
+                            f = _func[key];
                         }
-                    }
-                }
+                    });
+                });
             }
 
             if (!f) {

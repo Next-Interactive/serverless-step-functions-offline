@@ -62,8 +62,16 @@ module.exports = {
     },
 
     getStateMachine(stateMachineName) {
-        if (stateMachineName in this.serverless.service.stepFunctions.stateMachines) {
-            return this.serverless.service.stepFunctions.stateMachines[stateMachineName];
+        const stateMachines = this.serverless.service.stepFunctions.stateMachines
+        if (Array.isArray(stateMachines)) {
+            const index = stateMachines.findIndex(stateMachine => stateMachineName in stateMachine)
+            if (index > -1) {
+                return stateMachines[index][stateMachineName];
+            }
+        }
+
+        if (stateMachineName in stateMachines) {
+            return stateMachines[stateMachineName];
         }
         throw new this.serverless.classes
             .Error(`stateMachine "${stateMachineName}" doesn't exist in this Service`);
