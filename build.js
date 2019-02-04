@@ -117,8 +117,8 @@ module.exports = {
                 this.parallelBranch = branch;
                 return this.process(branch.States[branch.StartAt], branch.StartAt, this.eventForParallelExecution);
             });
-            this.process(this.states[currentState.Next], currentState.Next, this.eventParallelResult);
             delete this.parallelBranch;
+            this.process(this.states[currentState.Next], currentState.Next, this.eventParallelResult);
             delete this.eventParallelResult;
             return;
         case 'Choice':
