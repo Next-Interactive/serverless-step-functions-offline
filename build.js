@@ -87,12 +87,7 @@ module.exports = {
             process.env = Object.assign({}, this.environmentVariables);
             const variable = this.getItemFromConfiguration(this.variables, currentStateName);
 
-            let lambdaFunction;
-            if (this.functions[variable]) {
-                lambdaFunction = this.functions[variable];
-            } else {
-                lambdaFunction = this.getItemFromConfiguration(this.functions, variable);
-            }
+            const lambdaFunction = this.functions[variable] || this.getItemFromConfiguration(this.functions, variable);
 
             if (!lambdaFunction) {
                 this.cliLog(
@@ -117,7 +112,7 @@ module.exports = {
                 this.parallelBranch = branch;
                 return this.process(branch.States[branch.StartAt], branch.StartAt, this.eventForParallelExecution);
             });
-            delete this.parallelBranch;
+            delete this.parallelBranch; // delete branch before process to prevent using this parallel branch states when processing next state
             this.process(this.states[currentState.Next], currentState.Next, this.eventParallelResult);
             delete this.eventParallelResult;
             return;

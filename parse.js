@@ -84,6 +84,8 @@ module.exports = {
         if (name in collection) {
             return collection[name];
         }
+
+        return undefined;
     }
 
 };
