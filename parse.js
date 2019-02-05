@@ -62,11 +62,30 @@ module.exports = {
     },
 
     getStateMachine(stateMachineName) {
-        if (stateMachineName in this.serverless.service.stepFunctions.stateMachines) {
-            return this.serverless.service.stepFunctions.stateMachines[stateMachineName];
+        const stateMachines = this.serverless.service.stepFunctions.stateMachines;
+        const stateMachine = this.getItemFromConfiguration(stateMachines, stateMachineName);
+
+        if (!stateMachine) {
+            throw new this.serverless.classes
+                .Error(`stateMachine "${stateMachineName}" doesn't exist in this Service`);
         }
-        throw new this.serverless.classes
-            .Error(`stateMachine "${stateMachineName}" doesn't exist in this Service`);
+
+        return stateMachine;
+    },
+
+    getItemFromConfiguration(collection, name) {
+        if (Array.isArray(collection)) {
+            const index = collection.findIndex(variable => name in variable);
+            if (index > -1) {
+                return collection[index][name];
+            }
+        }
+
+        if (name in collection) {
+            return collection[name];
+        }
+
+        return undefined;
     }
 
 };

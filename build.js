@@ -20,7 +20,7 @@ module.exports = {
         const dir = path.dirname(functionHandler);
         const handler = path.basename(functionHandler);
         const splitHandler = handler.split('.');
-        const filePath = `${dir}/${splitHandler[0]}.js`;
+        const filePath = `.build/${dir}/${splitHandler[0]}.js`;
         const handlerName = `${splitHandler[1]}`;
 
         return {handler: handlerName, filePath};
@@ -85,16 +85,22 @@ module.exports = {
         case 'Task': // just push task to general array
             //before each task restore global default env variables
             process.env = Object.assign({}, this.environmentVariables);
-            let f = this.variables[currentStateName];
-            f = this.functions[f];
-            if (!f) {
-                this.cliLog(`Function "${currentStateName}" does not presented in serverless manifest`);
+            const variable = this.getItemFromConfiguration(this.variables, currentStateName);
+
+            const lambdaFunction = this.functions[variable] || this.getItemFromConfiguration(this.functions, variable);
+
+            if (!lambdaFunction) {
+                this.cliLog(
+                    `Function "${currentStateName}" has not been found in serverless.yml`
+                );
                 process.exit(1);
             }
-            const {handler, filePath} = this._findFunctionPathAndHandler(f.handler);
+            const { handler, filePath } = this._findFunctionPathAndHandler(
+                lambdaFunction.handler
+            );
             // if function has additional variables - attach it to function
-            if (f.environment) {
-                process.env = _.extend(process.env, f.environment);
+            if (lambdaFunction.environment) {
+                process.env = _.extend(process.env, lambdaFunction.environment);
             }
             return {
                 name: currentStateName,
@@ -106,8 +112,8 @@ module.exports = {
                 this.parallelBranch = branch;
                 return this.process(branch.States[branch.StartAt], branch.StartAt, this.eventForParallelExecution);
             });
+            delete this.parallelBranch; // delete branch before process to prevent using this parallel branch states when processing next state
             this.process(this.states[currentState.Next], currentState.Next, this.eventParallelResult);
-            delete this.parallelBranch;
             delete this.eventParallelResult;
             return;
         case 'Choice':
